@@ -408,6 +408,7 @@ def test_review_pipeline_forwards_with_resolved_project_root(monkeypatch, tmp_pa
             str(tmp_path / "metrics.json"),
             "--report-file",
             "审查报告/第18章.md",
+            "--save-metrics",
         ],
     )
 
@@ -427,6 +428,7 @@ def test_review_pipeline_forwards_with_resolved_project_root(monkeypatch, tmp_pa
         str(tmp_path / "metrics.json"),
         "--report-file",
         "审查报告/第18章.md",
+        "--save-metrics",
     ]
 
 
@@ -458,6 +460,7 @@ def test_review_pipeline_main_creates_output_directories(tmp_path):
     )
 
     metrics_out = project_root / ".webnovel" / "tmp" / "review" / "metrics.json"
+    report_file = project_root / "审查报告" / "第9章审查报告.md"
 
     old_argv = sys.argv
     sys.argv = [
@@ -470,6 +473,9 @@ def test_review_pipeline_main_creates_output_directories(tmp_path):
         str(review_results_path),
         "--metrics-out",
         str(metrics_out),
+        "--report-file",
+        "审查报告/第9章审查报告.md",
+        "--save-metrics",
     ]
     try:
         review_pipeline_module.main()
@@ -477,6 +483,19 @@ def test_review_pipeline_main_creates_output_directories(tmp_path):
         sys.argv = old_argv
 
     assert metrics_out.is_file()
+    assert report_file.is_file()
+    report_text = report_file.read_text(encoding="utf-8")
+    assert "# 第9章审查报告" in report_text
+    assert "小问题" in report_text
+    assert "## 其他问题" in report_text
+
+    import sqlite3
+
+    with sqlite3.connect(project_root / ".webnovel" / "index.db") as conn:
+        row = conn.execute(
+            "SELECT start_chapter, end_chapter, report_file FROM review_metrics"
+        ).fetchone()
+    assert row == (9, 9, "审查报告/第9章审查报告.md")
 
 
 def test_webnovel_skill_flow_runs_story_contract_context_and_review_pipeline_with_stubbed_vector_model(

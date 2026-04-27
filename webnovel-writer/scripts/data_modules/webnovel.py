@@ -289,6 +289,7 @@ def main() -> None:
     p_review_pipeline.add_argument("--review-results", required=True, help="reviewer 原始结果 JSON 文件")
     p_review_pipeline.add_argument("--metrics-out", default="", help="metrics 输出文件")
     p_review_pipeline.add_argument("--report-file", default="", help="审查报告路径")
+    p_review_pipeline.add_argument("--save-metrics", action="store_true", help="直接写入 index.db")
 
     knowledge_parser = sub.add_parser("knowledge", help="时序知识查询")
     knowledge_sub = knowledge_parser.add_subparsers(dest="knowledge_action")
@@ -387,6 +388,8 @@ def main() -> None:
             return_args.extend(["--metrics-out", str(args.metrics_out)])
         if args.report_file:
             return_args.extend(["--report-file", str(args.report_file)])
+        if args.save_metrics:
+            return_args.append("--save-metrics")
         raise SystemExit(_run_script("review_pipeline.py", return_args))
 
     if tool == "knowledge":
